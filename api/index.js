@@ -1,8 +1,9 @@
+// Adapted from server.js for Vercel serverless deployment
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const admin = require("firebase-admin");
-require("./firebaseConfig");
+require("../firebaseConfig");
 const morgan = require('morgan');
 
 const app = express();
@@ -28,6 +29,9 @@ async function connectDB() {
     process.exit(1);
   }
 }
+
+// Ensure DB connection on cold start
+connectDB();
 
 // Helper to get timestamp
 function getTimestamp() {
@@ -88,9 +92,4 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, async () => {
-  await connectDB();
-  console.log(`Server running on port ${PORT}`);
-});
+module.exports = app; 
