@@ -1,4 +1,3 @@
-// Adapted from server.js for Vercel serverless deployment
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
@@ -10,10 +9,12 @@ const Joi = require('joi');
 const app = express();
 
 // Middleware configuration - ORDER IS IMPORTANT
-app.use(express.json());  // Parse JSON bodies
-app.use(express.urlencoded({ extended: true }));  // Parse URL-encoded bodies
-app.use(morgan('dev'));  // Logging
-app.use(cors({ 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(morgan('dev'));
+
+// Enable CORS globally for all origins and methods
+app.use(cors({
   origin: "*",
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -91,13 +92,11 @@ async function connectDB() {
     console.log('Connected to MongoDB');
   } catch (error) {
     console.error('MongoDB connection error:', error);
-    // Do not use process.exit(1) in serverless
-    // Instead, throw error to let the function fail naturally
-    throw error;
+    process.exit(1);  // Exit on connection failure in traditional server
   }
 }
 
-// Ensure DB connection on cold start
+// Connect to DB before starting server
 connectDB();
 
 // Helper to get timestamp
@@ -111,7 +110,6 @@ app.post("/saveToken", validateRequest(saveTokenSchema), async (req, res) => {
   console.log(`[${getTimestamp()}] saveToken API triggered`);
   
   try {
-    // Save token if not already present
     await FcmToken.updateOne(
       { token },
       { $setOnInsert: { token } },
@@ -271,19 +269,15 @@ app.post("/push/custom", validateRequest(customNotificationSchema), async (req, 
   }
 });
 
-// Health check endpoint
-app.get('/health', (req, res) => {
+// Health check endpoint with explicit CORS
+app.options('/health', cors()); // handle preflight
+app.get('/health', cors(), (req, res) => {
   console.log(`[${getTimestamp()}] /health API triggered`);
   res.json({ status: 'ok' });
 });
 
-// For Vercel serverless
-module.exports = app;
-
-// For Render or local development
-if (require.main === module) {
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-} 
+// Start server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});

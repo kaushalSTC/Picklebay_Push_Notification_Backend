@@ -15,27 +15,30 @@
     });
 
     async function checkHealth() {
-        let response;
         try {
-            response = await window.axios.get('https://ca8b-2a09-bac5-406f-1a46-00-29e-f5.ngrok-free.app/health', {
+            const response = await window.axios.get('https://picklebay-push-notification-backend.onrender.com/health', {
                 headers: { 'ngrok-skip-browser-warning': 'true' }
             });
+    
             if (response.data && response.data.status === 'ok') {
                 alert('Health check successful: ' + JSON.stringify(response.data));
             } else {
                 alert('Health check failed: Unexpected response. Response data: ' + JSON.stringify(response.data));
             }
         } catch (err) {
-            let respString = '';
+            let errorMessage = 'Unknown error occurred.';
+    
             if (err.response) {
-                respString = JSON.stringify(err.response.data);
-            } else if (response) {
-                respString = JSON.stringify(response);
-            } else {
-                respString = err.message;
+                errorMessage = 'Server responded with error: ' + JSON.stringify(err.response.data);
+            } else if (err.request) {
+                errorMessage = 'Network error: No response received from server.';
+            } else if (err.message) {
+                errorMessage = 'Error message: ' + err.message;
             }
-            alert('Health check failed: ' + respString);
+    
+            alert('Health check failed: ' + errorMessage);
         }
     }
+    
 
 })();
