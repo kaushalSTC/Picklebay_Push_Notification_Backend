@@ -5,11 +5,13 @@ const mongoose = require('mongoose');
 const admin = require("firebase-admin");
 require("../firebaseConfig");
 const morgan = require('morgan');
+const cors = require('cors');
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
+app.use(cors("*"));
 
 // Mongoose model for FCM tokens
 const fcmTokenSchema = new mongoose.Schema({
