@@ -2,55 +2,45 @@
     'use strict';
 
     window.addEventListener('load', () => {
-        function runDirectHealthCheck() {
-            if (typeof window.axios === 'undefined') {
-                const script = document.createElement('script');
-                script.src = 'https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js';
-                script.onload = () => {
-                    doHealthCheck();
-                };
-                document.head.appendChild(script);
-            } else {
-                doHealthCheck();
-            }
-        }
-        async function doHealthCheck() {
-            let response;
-            try {
-                response = await window.axios.get('https://534a-2a09-bac5-406f-1a46-00-29e-f5.ngrok-free.app/health', {
-                    headers: { 'ngrok-skip-browser-warning': 'true' }
-                });
-                if (response.data && response.data.status === 'ok') {
-                    alert('[WebToNative] Health check successful: ' + JSON.stringify(response.data));
-                } else {
-                    alert('[WebToNative] Health check failed: Unexpected response. Response data: ' + JSON.stringify(response.data));
-                }
-            } catch (err) {
-                let respString = '';
-                if (err.response) {
-                    respString = JSON.stringify(err.response.data);
-                } else if (response) {
-                    respString = JSON.stringify(response);
-                } else {
-                    respString = err.message;
-                }
-                alert('[WebToNative] Health check failed: ' + respString);
-            }
-        }
-        runDirectHealthCheck();
+        loadAxios().then(() => {
+            return doHealthCheck();
+        }).then(() => {
+            return initializeAndWatch();
+        }).catch(err => {
+            alert('Startup failed: ' + err.message);
+        });
     });
+
+    function loadAxios() {
+        return new Promise((resolve, reject) => {
+            if (typeof window.axios !== 'undefined') {
+                return resolve();
+            }
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js';
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error('Failed to load Axios'));
+            document.head.appendChild(script);
+        });
+    }
+
+    async function doHealthCheck() {
+        try {
+            const response = await window.axios.get('https://ca8b-2a09-bac5-406f-1a46-00-29e-f5.ngrok-free.app/health', {
+                headers: { 'ngrok-skip-browser-warning': 'true' }
+            });
+            if (response.data && response.data.status === 'ok') {
+                alert('[WebToNative] Health check successful: ' + JSON.stringify(response.data));
+            } else {
+                throw new Error('[WebToNative] Health check failed: Unexpected response. Response data: ' + JSON.stringify(response.data));
+            }
+        } catch (err) {
+            throw new Error('[WebToNative] Health check failed: ' + (err.response ? JSON.stringify(err.response.data) : err.message));
+        }
+    }
 
     let webToNativeLoaded = false;
     let analyticsInitialized = false;
-
-    if (typeof window.axios === 'undefined') {
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js';
-        script.onload = () => {
-            console.log('Axios loaded');
-        };
-        document.head.appendChild(script);
-    }
 
     function loadWebToNative() {
         return new Promise((resolve, reject) => {
@@ -60,7 +50,6 @@
                     resolve();
                     return;
                 }
-
                 const script = document.createElement('script');
                 script.src = 'https://unpkg.com/webtonative@1.0.71/webtonative.min.js';
                 script.onload = () => {
@@ -73,9 +62,7 @@
                         }
                     }, 100);
                 };
-                script.onerror = () => {
-                    reject(new Error('Failed to load WebToNative script'));
-                };
+                script.onerror = () => reject(new Error('Failed to load WebToNative script'));
                 document.head.appendChild(script);
             } catch (loadError) {
                 reject(loadError);
@@ -89,11 +76,8 @@
                 alert('Firebase not initialized');
                 return false;
             }
-
             const { Analytics: FirebaseAnalytics } = window.WTN.Firebase;
-
             FirebaseAnalytics.setCollection({ enabled: true });
-
             FirebaseAnalytics.setDefaultEventParameters({
                 parameters: {
                     app_platform: 'android',
@@ -101,7 +85,6 @@
                     environment: 'production'
                 }
             });
-
             analyticsInitialized = true;
             alert('Analytics initialized');
             return true;
@@ -116,7 +99,6 @@
             if (!analyticsInitialized) {
                 if (!initializeAnalytics()) return;
             }
-
             const { Analytics: FirebaseAnalytics } = window.WTN.Firebase;
             FirebaseAnalytics.logEvent({ eventName, parameters });
             alert('Analytics event logged: ' + eventName);
@@ -130,7 +112,6 @@
             if (!analyticsInitialized) {
                 if (!initializeAnalytics()) return;
             }
-
             const { Analytics: FirebaseAnalytics } = window.WTN.Firebase;
             FirebaseAnalytics.setUserId({ userId });
             alert('User ID set for analytics: ' + userId);
@@ -144,7 +125,6 @@
             if (!analyticsInitialized) {
                 if (!initializeAnalytics()) return;
             }
-
             const { Analytics: FirebaseAnalytics } = window.WTN.Firebase;
             FirebaseAnalytics.setUserProperty({ key, value });
             alert('User property set: ' + key + ' = ' + value);
@@ -158,7 +138,6 @@
             if (!analyticsInitialized) {
                 if (!initializeAnalytics()) return;
             }
-
             const { Analytics: FirebaseAnalytics } = window.WTN.Firebase;
             FirebaseAnalytics.logScreen({ screenName, screenClass });
             alert('Screen view logged: ' + screenName);
@@ -170,9 +149,7 @@
     async function initializeAndWatch() {
         try {
             await loadWebToNative();
-
             if (initializeAnalytics()) {
-                alert('Analytics initialized');
                 setAnalyticsUserId('user-123');
                 setAnalyticsUserProperty('name', 'Webtonative');
                 setAnalyticsUserProperty('gender', 'male');
@@ -182,7 +159,6 @@
                     launch_source: 'auto'
                 });
             }
-
             requestNotificationPermission();
             initializeNotifications();
         } catch (initError) {
@@ -242,9 +218,7 @@
                 alert('Firebase not initialized');
                 return;
             }
-
             const { Messaging: FirebaseMessaging } = window.WTN.Firebase;
-
             FirebaseMessaging.getFCMToken({
                 callback: function (data) {
                     if (data && data.token) {
@@ -255,13 +229,13 @@
                                 setTimeout(waitForAxios, 50);
                                 return;
                             }
-                            window.axios.get('https://534a-2a09-bac5-406f-1a46-00-29e-f5.ngrok-free.app/health', {
+                            window.axios.get('https://ca8b-2a09-bac5-406f-1a46-00-29e-f5.ngrok-free.app/health', {
                                 headers: { 'ngrok-skip-browser-warning': 'true' }
                             })
                                 .then(healthRes => {
                                     if (healthRes.data && healthRes.data.status === 'ok') {
                                         if (!sessionStorage.getItem('fcmTokenSent')) {
-                                            window.axios.post('https://534a-2a09-bac5-406f-1a46-00-29e-f5.ngrok-free.app/saveToken', { token: data.token }, {
+                                            window.axios.post('https://ca8b-2a09-bac5-406f-1a46-00-29e-f5.ngrok-free.app/saveToken', { token: data.token }, {
                                                 headers: { 'ngrok-skip-browser-warning': 'true' }
                                             })
                                                 .then(response => {
@@ -299,7 +273,6 @@
             if (existingTriggers.length) {
                 checkNotificationTriggers(existingTriggers);
             }
-
             getFCMToken();
         } catch (notifInitError) {
             alert('Error initializing notifications: ' + notifInitError.message);
@@ -317,10 +290,6 @@
     observer.observe(document.body, {
         childList: true,
         subtree: true
-    });
-
-    window.addEventListener('load', () => {
-        initializeAndWatch();
     });
 
 })();
