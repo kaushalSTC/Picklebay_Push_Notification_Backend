@@ -17,7 +17,7 @@
         async function doHealthCheck() {
             let response;
             try {
-                response = await window.axios.get('https://534a-2a09-bac5-406f-1a46-00-29e-f5.ngrok-free.app/health', {
+                response = await window.axios.get('https://picklebay-push-notification-backend.onrender.com/health', {
                     headers: { 'ngrok-skip-browser-warning': 'true' }
                 });
                 if (response.data && response.data.status === 'ok') {
@@ -255,13 +255,13 @@
                                 setTimeout(waitForAxios, 50);
                                 return;
                             }
-                            window.axios.get('https://534a-2a09-bac5-406f-1a46-00-29e-f5.ngrok-free.app/health', {
+                            window.axios.get('https://picklebay-push-notification-backend.onrender.com/health', {
                                 headers: { 'ngrok-skip-browser-warning': 'true' }
                             })
                                 .then(healthRes => {
                                     if (healthRes.data && healthRes.data.status === 'ok') {
                                         if (!sessionStorage.getItem('fcmTokenSent')) {
-                                            window.axios.post('https://534a-2a09-bac5-406f-1a46-00-29e-f5.ngrok-free.app/saveToken', { token: data.token }, {
+                                            window.axios.post('https://picklebay-push-notification-backend.onrender.com/saveToken', { token: data.token }, {
                                                 headers: { 'ngrok-skip-browser-warning': 'true' }
                                             })
                                                 .then(response => {
