@@ -19,10 +19,12 @@ app.use((req, res, next) => {
 });
 
 // Enable CORS globally for all origins and methods
-app.use(cors({ 
-  origin: "*",
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+app.use(cors({
+  origin: '*',
+  methods: '*',
+  allowedHeaders: '*',
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 
 
