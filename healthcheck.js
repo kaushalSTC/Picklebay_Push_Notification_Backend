@@ -17,7 +17,7 @@
     async function checkHealth() {
         let response;
         try {
-            response = await window.axios.get('https://6e53-2a09-bac5-406f-1a46-00-29e-f5.ngrok-free.app/health');
+            response = await window.axios.get('https://picklebay-push-notificati-git-ad03d2-kaushals-projects-4063075f.vercel.app/health');
             if (response.data && response.data.status === 'ok') {
                 alert('Health check successful: ' + JSON.stringify(response.data));
             } else {

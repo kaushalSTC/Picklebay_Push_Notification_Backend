@@ -26,7 +26,9 @@ async function connectDB() {
     console.log('Connected to MongoDB');
   } catch (error) {
     console.error('MongoDB connection error:', error);
-    process.exit(1);
+    // Do not use process.exit(1) in serverless
+    // Instead, throw error to let the function fail naturally
+    throw error;
   }
 }
 
@@ -92,4 +94,13 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-module.exports = app; 
+// For Vercel serverless
+module.exports = app;
+
+// For Render or local development
+if (require.main === module) {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+} 
