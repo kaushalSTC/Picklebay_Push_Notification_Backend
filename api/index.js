@@ -19,11 +19,12 @@ app.use((req, res, next) => {
 });
 
 // Enable CORS globally for all origins and methods
-app.use(cors({
+app.use(cors({ 
   origin: "*",
-  methods: ['GET', 'POST'],
+  methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 
 // Validation Schemas
 const customNotificationSchema = Joi.object({
