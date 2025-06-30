@@ -13,6 +13,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
+app.use((req, res, next) => {
+  console.log(`[${getTimestamp()}] Incoming request: ${req.method} ${req.path}`);
+  next();
+});
+
 // Enable CORS globally for all origins and methods
 app.use(cors({
   origin: "*",
